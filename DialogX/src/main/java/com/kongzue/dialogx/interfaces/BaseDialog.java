@@ -535,15 +535,14 @@ public abstract class BaseDialog implements LifecycleOwner {
     public abstract boolean isCancelable();
 
     public View createView(int layoutId) {
-        Context fixContext = getOwnActivity();
+        Activity activity = getOwnActivity();
         if (isActivityImplMode()) {
-            if (fixContext == null) {
+            if (activity == null) {
                 error("DialogX 未初始化(E3)。\n请检查是否在启动对话框前进行初始化操作，使用以下代码进行初始化：\nDialogX.init(context);\n\n另外建议您前往查看 DialogX 的文档进行使用：https://github.com/kongzue/DialogX");
                 return null;
             }
         }
-        fixContext = FixContextUtil.getFixContext(fixContext);
-        return LayoutInflater.from(fixContext).cloneInContext(fixContext).inflate(layoutId, null);
+        return FixContextUtil.getFixLayoutInflater(activity).inflate(layoutId, null);
     }
 
     public boolean isShow() {

@@ -12,7 +12,7 @@ public class FixContextUtil {
     }
 
     //获得注入了ClassLoader的LayoutInflater,使其能加载模块中的类界面
-    public static LayoutInflater getContextInflater(Context context) {
+    public static LayoutInflater getFixLayoutInflater(Context context) {
         return LayoutInflater.from(context).cloneInContext(getFixContext(context));
     }
 
@@ -45,7 +45,6 @@ public class FixContextUtil {
 
             }
             return findClass(name);
-
         }
 
         @Override

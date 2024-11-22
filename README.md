@@ -27,6 +27,11 @@ dependencyResolutionManagement {
 ```
 
 初始化流程正常初始化即可,不要忘了将模块APK资源注入到宿主Activity，不然会查找不到XML的  
+一般建议在 Application 的实现类中的 onCreate 方法中进行配置：
+```java
+//初始化
+DialogX.init(this);
+```
 附上注入模块APK注入资源到宿主的代码
 ```java
     public static void injectResourcesToContext(Context context) {

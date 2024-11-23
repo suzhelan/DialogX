@@ -75,28 +75,23 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content" />
 
-                        <com.google.android.material.textfield.TextInputLayout
+
+                        <EditText
+                            android:id="@+id/txt_input"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:tag="dialogx_editbox">
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginEnd="20dp"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:padding="10dp"
+                            android:scrollbars="vertical"
+                            android:text=""
+                            android:textColor="@color/white"
+                            android:textSize="18dp" />
 
-                            <EditText
-                                android:id="@+id/txt_input"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center_horizontal"
-                                android:layout_marginStart="20dp"
-                                android:layout_marginTop="10dp"
-                                android:layout_marginEnd="20dp"
-                                android:inputType="text"
-                                android:maxLines="1"
-                                android:padding="10dp"
-                                android:scrollbars="vertical"
-                                android:text=""
-                                android:textColor="@color/white"
-                                android:textSize="18dp" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
 
                     </LinearLayout>
 

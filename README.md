@@ -16,16 +16,16 @@ dependencyResolutionManagement {
     }
 }
 ```
-在app目录下的build.gradle引用 dialogVersion最新版本为 [![](https://jitpack.io/v/suzhelan/DialogX.svg)](https://jitpack.io/#suzhelan/DialogX)
+在app目录下的build.gradle引用 dialogxVersion最新版本为 [![](https://jitpack.io/v/suzhelan/DialogX.svg)](https://jitpack.io/#suzhelan/DialogX)
 ```gradle
-    val dialogVersion = "0.0.50.beta24"
+    val dialogXVersion = "0.0.50.beta24"
     //引入DialogX主体
-    implementation("com.github.suzhelan.DialogX:DialogX:$dialogVersion")
+    implementation("com.github.suzhelan.DialogX:DialogX:$dialogXVersion")
     //非必须 DialogX官方提供的主题样式
-    implementation("com.github.suzhelan.DialogX:DialogXKongzueStyle:$dialogVersion")
-    implementation ("com.github.suzhelan.DialogX:DialogXMIUIStyle:$dialogVersion")
-    implementation("com.github.suzhelan.DialogX:DialogXIOSStyle:$dialogVersion")
-    implementation("com.github.suzhelan.DialogX:DialogXMaterialYou:$dialogVersion")
+    implementation("com.github.suzhelan.DialogX:DialogXKongzueStyle:$dialogXVersion")
+    implementation ("com.github.suzhelan.DialogX:DialogXMIUIStyle:$dialogXVersion")
+    implementation("com.github.suzhelan.DialogX:DialogXIOSStyle:$dialogXVersion")
+    implementation("com.github.suzhelan.DialogX:DialogXMaterialYou:$dialogXVersion")
 ```
 
 初始化流程正常初始化即可,不要忘了将模块APK资源注入到宿主Activity，不然会查找不到XML的  

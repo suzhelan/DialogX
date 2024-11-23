@@ -31,7 +31,7 @@ public class DialogX {
     public static DialogXStyle globalStyle = MaterialStyle.style();
     
     //全局对话框明暗风格
-    public static DialogX.THEME globalTheme = DialogX.THEME.LIGHT;
+    public static DialogX.THEME globalTheme = THEME.AUTO;
     
     //TipDialog 和 WaitDialog 明暗风格，不设置则默认根据 globalTheme 定义
     public static DialogX.THEME tipTheme;

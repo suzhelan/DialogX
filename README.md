@@ -18,7 +18,7 @@ dependencyResolutionManagement {
 ```
 在app目录下的build.gradle引用 dialogxVersion最新版本为 [![](https://jitpack.io/v/suzhelan/DialogX.svg)](https://jitpack.io/#suzhelan/DialogX)
 ```gradle
-    val dialogXVersion = "0.0.50.beta24"
+    val dialogXVersion = "0.0.50.beta26"
     //引入DialogX主体
     implementation("com.github.suzhelan.DialogX:DialogX:$dialogXVersion")
     //非必须 DialogX官方提供的主题样式

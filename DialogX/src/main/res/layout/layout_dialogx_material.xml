@@ -20,6 +20,7 @@
             android:background="@drawable/rect_dialogx_material_bkg_light"
             android:elevation="27dp">
 
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

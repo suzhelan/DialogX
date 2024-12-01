@@ -556,7 +556,10 @@ public class MainActivity extends BaseActivity {
         btnMutiSelectMessageMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MessageMenu.show(multiSelectMenuText).setMessage("这里是选择城市的模拟范例，这是一个演示菜单").setTitle("请选择城市").setOnMenuItemClickListener(new OnMenuItemSelectListener<MessageMenu>() {
+                MessageMenu.show(multiSelectMenuText)
+                        .setMessage("这里是选择城市的模拟范例，这是一个演示菜单")
+                        .setTitle("请选择城市")
+                        .setOnMenuItemClickListener(new OnMenuItemSelectListener<MessageMenu>() {
                             @Override
                             public void onMultiItemSelect(MessageMenu dialog, CharSequence[] text, int[] index) {
                                 multiSelectMenuResultCache = "";
@@ -861,7 +864,8 @@ public class MainActivity extends BaseActivity {
         btnCustomInputDialog.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                InputDialog.show("这里是标题", "此对话框演示的是自定义对话框内部布局的效果", "确定", "取消").setCustomView(new OnBindView<MessageDialog>(R.layout.layout_custom_view) {
+                InputDialog.show("这里是标题", "此对话框演示的是自定义对话框内部布局的效果", "确定", "取消")
+                        .setCustomView(new OnBindView<MessageDialog>(R.layout.layout_custom_view) {
                     @Override
                     public void onBind(MessageDialog dialog, View v) {
 
@@ -1279,7 +1283,10 @@ public class MainActivity extends BaseActivity {
         btnBottomMultiSelectMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BottomMenu.show(multiSelectMenuText).setMessage("这里是选择城市的模拟范例，这是一个演示菜单").setTitle("请选择城市").setOnMenuItemClickListener(new OnMenuItemSelectListener<BottomMenu>() {
+                BottomMenu.show(multiSelectMenuText)
+                        .setMessage("这里是选择城市的模拟范例，这是一个演示菜单")
+                        .setTitle("请选择城市")
+                        .setOnMenuItemClickListener(new OnMenuItemSelectListener<BottomMenu>() {
                             @Override
                             public void onMultiItemSelect(BottomMenu dialog, CharSequence[] text, int[] index) {
                                 multiSelectMenuResultCache = "";

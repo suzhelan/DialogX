@@ -62,7 +62,7 @@ public class MessageMenuArrayAdapter extends BaseAdapter {
         MessageMenuArrayAdapter.ViewHolder viewHolder = null;
         if (convertView == null) {
             viewHolder = new MessageMenuArrayAdapter.ViewHolder();
-            LayoutInflater mInflater = LayoutInflater.from(context);
+            LayoutInflater mInflater = FixContextUtil.getFixInflater(context);
 
             int resourceId = R.layout.item_dialogx_material_bottom_menu_normal_text;
             if (messageMenu.getStyle().overrideBottomDialogRes() != null) {

@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment;
 import androidx.viewbinding.ViewBinding;
 
 import com.kongzue.dialogx.R;
+import com.kongzue.dialogx.util.FixContextUtil;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -71,7 +72,7 @@ public abstract class OnBindingView<D, VB extends ViewBinding> extends OnBindVie
     private static ViewBinding getViewBinding(Class bindingClass) {
         try {
             Method inflateMethod = bindingClass.getMethod("inflate", LayoutInflater.class);
-            return (ViewBinding) inflateMethod.invoke((Object) null, LayoutInflater.from(BaseDialog.getContext()));
+            return (ViewBinding) inflateMethod.invoke( null, FixContextUtil.getFixInflater(BaseDialog.getContext()));
         } catch (Exception var5) {
             error("DialogX: OnBindingView初始化异常，未能根据bindingClass找到对应的ViewBinding，请尝试指定ViewBinding实例");
             var5.printStackTrace();

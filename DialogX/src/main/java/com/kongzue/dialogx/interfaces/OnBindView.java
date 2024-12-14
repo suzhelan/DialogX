@@ -9,6 +9,7 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 import com.kongzue.dialogx.DialogX;
+import com.kongzue.dialogx.util.FixContextUtil;
 import com.kongzue.dialogx.util.views.ExtendChildLayoutParamsFrameLayout;
 
 import static com.kongzue.dialogx.DialogX.ERROR_INIT_TIPS;
@@ -36,7 +37,7 @@ public abstract class OnBindView<D> {
             return;
         }
         this.layoutResId = layoutResId;
-        customView = LayoutInflater.from(BaseDialog.getTopActivity()).inflate(layoutResId, new RelativeLayout(BaseDialog.getTopActivity()), false);
+        customView = FixContextUtil.getFixInflater(BaseDialog.getTopActivity()).inflate(layoutResId, new RelativeLayout(BaseDialog.getTopActivity()), false);
     }
 
     public OnBindView(int layoutResId, boolean async) {
@@ -51,7 +52,7 @@ public abstract class OnBindView<D> {
                 public void run() {
                     super.run();
                     synchronized (OnBindView.this) {
-                        customView = LayoutInflater.from(BaseDialog.getTopActivity()).inflate(layoutResId, new RelativeLayout(BaseDialog.getTopActivity()), false);
+                        customView = FixContextUtil.getFixInflater(BaseDialog.getTopActivity()).inflate(layoutResId, new RelativeLayout(BaseDialog.getTopActivity()), false);
                         if (waitBindRunnable != null) {
                             waitBindRunnable.run();
                             waitBindRunnable = null;
@@ -60,7 +61,7 @@ public abstract class OnBindView<D> {
                 }
             }.start();
         } else {
-            customView = LayoutInflater.from(BaseDialog.getTopActivity()).inflate(layoutResId, new RelativeLayout(BaseDialog.getTopActivity()), false);
+            customView = FixContextUtil.getFixInflater(BaseDialog.getTopActivity()).inflate(layoutResId, new RelativeLayout(BaseDialog.getTopActivity()), false);
         }
     }
 
@@ -116,7 +117,7 @@ public abstract class OnBindView<D> {
 
     public View getCustomView() {
         if (customView == null) {
-            customView = LayoutInflater.from(BaseDialog.getTopActivity()).inflate(layoutResId, new RelativeLayout(BaseDialog.getTopActivity()), false);
+            customView = FixContextUtil.getFixInflater(BaseDialog.getTopActivity()).inflate(layoutResId, new RelativeLayout(BaseDialog.getTopActivity()), false);
         }
         return customView;
     }

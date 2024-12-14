@@ -40,7 +40,7 @@ public class PopMenuArrayAdapter extends BaseAdapter {
         this.popMenu = popMenu;
         this.menuList = menuList;
         this.context = context;
-        mInflater = LayoutInflater.from(context);
+        mInflater = FixContextUtil.getFixInflater(context);
     }
     
     public List<CharSequence> getMenuList() {

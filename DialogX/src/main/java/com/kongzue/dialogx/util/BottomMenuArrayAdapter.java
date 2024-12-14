@@ -70,7 +70,7 @@ public class BottomMenuArrayAdapter extends BaseAdapter {
         ViewHolder viewHolder = null;
         if (convertView == null) {
             viewHolder = new ViewHolder();
-            LayoutInflater mInflater = LayoutInflater.from(context);
+            LayoutInflater mInflater = FixContextUtil.getFixInflater(context);
 
             int resourceId = R.layout.item_dialogx_material_bottom_menu_normal_text;
             if (bottomMenu.getStyle().overrideBottomDialogRes() != null) {

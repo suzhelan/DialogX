@@ -1,6 +1,8 @@
 
 ## [官方文档](https://github.com/kongzue/DialogX/tree/master)
 
+仓库版本列表 [![](https://jitpack.io/v/suzhelan/DialogX.svg)](https://jitpack.io/#suzhelan/DialogX)
+
 ## 本分支修改 ，适配在XPosed环境中宿主使用的使用问题
 
 使用指南
@@ -16,9 +18,9 @@ dependencyResolutionManagement {
     }
 }
 ```
-在app目录下的build.gradle引用 dialogxVersion最新版本为 [![](https://jitpack.io/v/suzhelan/DialogX.svg)](https://jitpack.io/#suzhelan/DialogX)
+在app目录下的build.gradle引用 dialogxVersion最新版本为 0.0.50.beta32
 ```gradle
-    val dialogXVersion = "0.0.50.beta30"
+    val dialogXVersion = "0.0.50.beta32"
     //引入DialogX主体
     implementation("com.github.suzhelan.DialogX:DialogX:$dialogXVersion")
     //非必须 DialogX官方提供的主题样式

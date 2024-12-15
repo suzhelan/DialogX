@@ -32,7 +32,9 @@ dependencyResolutionManagement {
 一般建议在 Application 的实现类中的 onCreate 方法中进行配置：
 ```java
 //初始化
-DialogX.init(this);
+        DialogX.init(this);
+        DialogX.globalTheme = DialogX.THEME.AUTO;
+        DialogX.globalStyle = new MaterialYouStyle();//如果有
 ```
 附上注入模块APK注入资源到宿主的代码
 ```java

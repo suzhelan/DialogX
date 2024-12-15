@@ -43,6 +43,7 @@ import com.kongzue.dialogx.impl.DialogFragmentImpl;
 import com.kongzue.dialogx.util.ActivityRunnable;
 import com.kongzue.dialogx.util.DialogListBuilder;
 import com.kongzue.dialogx.util.DialogXFloatingWindowActivity;
+import com.kongzue.dialogx.util.FixContextUtil;
 import com.kongzue.dialogx.util.TextInfo;
 import com.kongzue.dialogx.util.WindowUtil;
 import com.kongzue.dialogx.util.views.DialogXBaseRelativeLayout;
@@ -544,9 +545,9 @@ public abstract class BaseDialog implements LifecycleOwner {
                 error("DialogX 未初始化(E3)。\n请检查是否在启动对话框前进行初始化操作，使用以下代码进行初始化：\nDialogX.init(context);\n\n另外建议您前往查看 DialogX 的文档进行使用：https://github.com/kongzue/DialogX");
                 return null;
             }
-            return LayoutInflater.from(getOwnActivity()).inflate(layoutId, null);
+            return FixContextUtil.getFixInflater(getOwnActivity()).inflate(layoutId, null);
         } else {
-            return LayoutInflater.from(getApplicationContext()).inflate(layoutId, null);
+            return FixContextUtil.getFixInflater(getApplicationContext()).inflate(layoutId, null);
         }
     }
 

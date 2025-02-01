@@ -1,8 +1,6 @@
 
 ## [官方文档](https://github.com/kongzue/DialogX/tree/master)
 
-仓库版本列表 [![](https://jitpack.io/v/suzhelan/DialogX.svg)](https://jitpack.io/#suzhelan/DialogX)
-
 ## 本分支修改 ，适配在XPosed环境中宿主使用的使用问题
 
 使用指南

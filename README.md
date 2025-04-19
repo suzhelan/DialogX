@@ -31,7 +31,7 @@ dependencyResolutionManagement {
 初始化流程正常初始化即可,不要忘了将模块APK资源注入到宿主Activity，不然会查找不到XML的  
 一般建议在 Application 的实现类中的 onCreate 方法中进行配置：
 ```java
-//初始化
+        //初始化
         DialogX.init(this);
         DialogX.globalTheme = DialogX.THEME.AUTO;
         DialogX.globalStyle = new MaterialYouStyle();//如果有

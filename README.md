@@ -16,9 +16,9 @@ dependencyResolutionManagement {
     }
 }
 ```
-在app目录下的build.gradle引用 dialogxVersion最新版本为 0.0.50.beta32
+在app目录下的build.gradle引用 dialogxVersion最新版本为 0.0.50.beta38
 ```gradle
-    val dialogXVersion = "0.0.50.beta32"
+    val dialogXVersion = "0.0.50.beta38"
     //引入DialogX主体
     implementation("com.github.suzhelan.DialogX:DialogX:$dialogXVersion")
     //非必须 DialogX官方提供的主题样式

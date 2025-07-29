@@ -23,6 +23,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.R;
@@ -37,6 +38,7 @@ import com.kongzue.dialogx.interfaces.NoTouchInterface;
 import com.kongzue.dialogx.interfaces.OnBindView;
 import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.kongzue.dialogx.interfaces.OnSafeInsetsChangeListener;
+import com.kongzue.dialogx.interfaces.PopMoveDisplacementInterceptor;
 import com.kongzue.dialogx.util.TextInfo;
 import com.kongzue.dialogx.util.views.DialogXBaseRelativeLayout;
 
@@ -65,6 +67,8 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
     public static long overrideExitDuration = -1;
     public static int overrideEnterAnimRes = 0;
     public static int overrideExitAnimRes = 0;
+    public static int maxShowCount = Integer.MAX_VALUE;
+    public static PopMoveDisplacementInterceptor<PopTip> moveDisplacementInterceptor;
 
     protected OnBindView<PopTip> onBindView;
     protected DialogLifecycleCallback<PopTip> dialogLifecycleCallback;
@@ -314,9 +318,19 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
                 }
             } else {
                 if (popTipList != null) {
-                    for (int i = 0; i < popTipList.size(); i++) {
-                        PopTip popInstance = popTipList.get(i);
-                        popInstance.moveUp();
+                    CopyOnWriteArrayList<PopTip> copyPopTipList = new CopyOnWriteArrayList<>(popTipList);
+                    for (int i = 0; i < copyPopTipList.size(); i++) {
+                        PopTip popInstance = copyPopTipList.get(i);
+                        if (copyPopTipList.size() < maxShowCount) {
+                            popInstance.moveBack();
+                        } else {
+                            if (i <= copyPopTipList.size() - maxShowCount) {
+                                popInstance.dismiss();
+                                popTipList.remove(popInstance);
+                            } else {
+                                popInstance.moveBack();
+                            }
+                        }
                     }
                 }
             }
@@ -361,7 +375,7 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
 
     public PopTip show(Activity activity) {
         super.beforeShow();
-        if (getDialogView() != null) {
+        if (getDialogView() == null) {
             if (DialogX.onlyOnePopTip) {
                 PopTip oldInstance = null;
                 if (popTipList != null && !popTipList.isEmpty()) {
@@ -372,9 +386,19 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
                 }
             } else {
                 if (popTipList != null) {
-                    for (int i = 0; i < popTipList.size(); i++) {
-                        PopTip popInstance = popTipList.get(i);
-                        popInstance.moveUp();
+                    CopyOnWriteArrayList<PopTip> copyPopTipList = new CopyOnWriteArrayList<>(popTipList);
+                    for (int i = 0; i < copyPopTipList.size(); i++) {
+                        PopTip popInstance = copyPopTipList.get(i);
+                        if (copyPopTipList.size() < maxShowCount) {
+                            popInstance.moveBack();
+                        } else {
+                            if (i <= copyPopTipList.size() - maxShowCount) {
+                                popInstance.dismiss();
+                                popTipList.remove(popInstance);
+                            } else {
+                                popInstance.moveBack();
+                            }
+                        }
                     }
                 }
             }
@@ -542,8 +566,8 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
                     }
                     getDialogLifecycleCallback().onDismiss(me);
                     PopTip.this.onDismiss(me);
-                    dialogImpl = null;
                     setLifecycleState(Lifecycle.State.DESTROYED);
+                    dialogImpl = null;
                     System.gc();
                 }
             });
@@ -719,12 +743,22 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
                     public void run() {
                         getDialogXAnimImpl().doExitAnim(me, boxBody);
 
+                        preRecycle = true;
                         runOnMainDelay(new Runnable() {
                             @Override
                             public void run() {
                                 waitForDismiss();
                             }
                         }, getExitAnimationDuration(null));
+
+                        if (popTipList != null) {
+                            //使位于自己之前的PopTip moveDown
+                            int index = popTipList.indexOf(me);
+                            for (int i = 0; i < index; i++) {
+                                PopTip popTip = popTipList.get(i);
+                                popTip.moveFront();
+                            }
+                        }
                     }
                 });
             }
@@ -808,10 +842,13 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
             return;
         }
         preRecycle = true;
+        if (getDialogView() != null) {
+            getDialogView().setVisibility(View.GONE);
+        }
         CopyOnWriteArrayList<PopTip> copyPopTipList = new CopyOnWriteArrayList<>(popTipList);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             copyPopTipList.removeIf(Objects::isNull);
-        }else{
+        } else {
             Iterator<PopTip> iterator = copyPopTipList.iterator();
             while (iterator.hasNext()) {
                 if (iterator.next() == null) {
@@ -819,21 +856,10 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
                 }
             }
         }
-        boolean allPreRecycled = true;
-        for (PopTip popTip : copyPopTipList) {
-            if (!popTip.preRecycle) {
-                allPreRecycled = false;
-                break;
-            }
-        }
-        if (allPreRecycled) {
-            for (PopTip popTip : copyPopTipList) {
-                dismiss(popTip.getDialogView());
-            }
-        }
+        dismiss(getDialogView());
     }
 
-    private void moveUp() {
+    private void moveBack() {
         if (getDialogImpl() != null && getDialogImpl().boxBody != null) {
             if (getDialogImpl() == null || getDialogImpl().boxBody == null) return;
             View bodyView = getDialogImpl().boxBody;
@@ -861,11 +887,16 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
                             moveAimTop = bodyView.getY() - bodyView.getHeight() * 1.3f;
                             break;
                     }
+                    if (moveDisplacementInterceptor != null) {
+                        moveAimTop = moveDisplacementInterceptor.resetAnimY(popTipList == null ? 0 : popTipList.indexOf(me), me, bodyView.getY(), moveAimTop, (int) (bodyView.getHeight() / bodyView.getScaleY()), popTipList == null ? 1 : popTipList.size(), true);
+                    }
                     if (bodyView.getTag() instanceof ValueAnimator) {
                         ((ValueAnimator) bodyView.getTag()).end();
                     }
-                    log("#Animation from:" + bodyView.getY() + " to:" + moveAimTop);
-                    ValueAnimator valueAnimator = ValueAnimator.ofFloat(bodyView.getY(), moveAimTop);
+                    //log("#Animation from:" + bodyView.getY() + " to:" + moveAimTop);
+                    final float fromY = bodyView.getY();
+                    float toY = moveAimTop;
+                    ValueAnimator valueAnimator = ValueAnimator.ofFloat(fromY, toY);
                     bodyView.setTag(valueAnimator);
                     valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                         @Override
@@ -875,8 +906,13 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
                                 return;
                             }
                             View bodyView = getDialogImpl().boxBody;
+                            float value = (Float) animation.getAnimatedValue();
+                            float totalDistance = toY - fromY;
+                            if (moveDisplacementInterceptor != null && moveDisplacementInterceptor.animUpdater(popTipList == null ? 0 : popTipList.indexOf(me), me, bodyView, fromY, toY, Math.max(0f, Math.min(1f, (totalDistance == 0f ? 1f : (value - fromY) / totalDistance))), animation, popTipList == null ? 1 : countDisplayPopTipsNum(), true)) {
+                                return;
+                            }
                             if (bodyView != null && bodyView.isAttachedToWindow()) {
-                                bodyView.setY((Float) animation.getAnimatedValue());
+                                bodyView.setY(value);
                             }
                         }
                     });
@@ -885,6 +921,82 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
                 }
             });
         }
+    }
+
+    private void moveFront() {
+        if (getDialogImpl() != null && getDialogImpl().boxBody != null) {
+            if (getDialogImpl() == null || getDialogImpl().boxBody == null) return;
+            View bodyView = getDialogImpl().boxBody;
+            bodyView.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (getDialogImpl() == null) {
+                        return;
+                    }
+                    if (align == null && style.popTipSettings() != null) {
+                        align = style.popTipSettings().align();
+                    }
+                    if (align == null) align = DialogXStyle.PopTipSettings.ALIGN.TOP;
+                    float moveAimTop = 0;
+                    switch (align) {
+                        case TOP:
+                            moveAimTop = bodyView.getY() - bodyView.getHeight() * 1.3f;
+                            break;
+                        case TOP_INSIDE:
+                            moveAimTop = bodyView.getY() - bodyView.getHeight() + bodyView.getPaddingTop();
+                            break;
+                        case CENTER:
+                        case BOTTOM:
+                        case BOTTOM_INSIDE:
+                            moveAimTop = bodyView.getY() + bodyView.getHeight() * 1.3f;
+                            break;
+                    }
+                    if (moveDisplacementInterceptor != null) {
+                        moveAimTop = moveDisplacementInterceptor.resetAnimY(popTipList == null ? 0 : popTipList.indexOf(me), me, bodyView.getY(), moveAimTop, (int) (bodyView.getHeight() / bodyView.getScaleY()), popTipList == null ? 1 : popTipList.size(), false);
+                    }
+                    if (bodyView.getTag() instanceof ValueAnimator) {
+                        ((ValueAnimator) bodyView.getTag()).end();
+                    }
+                    //log("#Animation from:" + bodyView.getY() + " to:" + moveAimTop);
+                    final float fromY = bodyView.getY();
+                    float toY = moveAimTop;
+                    ValueAnimator valueAnimator = ValueAnimator.ofFloat(fromY, toY);
+                    bodyView.setTag(valueAnimator);
+                    valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                        @Override
+                        public void onAnimationUpdate(ValueAnimator animation) {
+                            if (getDialogImpl() == null || !isShow) {
+                                animation.cancel();
+                                return;
+                            }
+                            View bodyView = getDialogImpl().boxBody;
+                            float value = (Float) animation.getAnimatedValue();
+                            float totalDistance = toY - fromY;
+                            if (moveDisplacementInterceptor != null && moveDisplacementInterceptor.animUpdater(popTipList == null ? 0 : popTipList.indexOf(me), me, bodyView, fromY, toY, Math.max(0f, Math.min(1f, (totalDistance == 0f ? 1f : (value - fromY) / totalDistance))), animation, popTipList == null ? 1 : countDisplayPopTipsNum(), false)) {
+                                return;
+                            }
+                            if (bodyView != null && bodyView.isAttachedToWindow()) {
+                                bodyView.setY(value);
+                            }
+                        }
+                    });
+                    valueAnimator.setDuration(exitAnimDuration == -1 ? 300 : exitAnimDuration).setInterpolator(new AccelerateInterpolator(2f));
+                    valueAnimator.start();
+                }
+            });
+        }
+    }
+
+    private int countDisplayPopTipsNum() {
+        if (popTipList == null) return 0;
+        int count = 0;
+        for (int i = 0; i < popTipList.size(); i++) {
+            PopTip tips = popTipList.get(i);
+            if (tips != null && !tips.preRecycle) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public void refreshUI() {
@@ -1126,9 +1238,19 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
             }
         } else {
             if (popTipList != null) {
-                for (int i = 0; i < popTipList.size(); i++) {
-                    PopTip popInstance = popTipList.get(i);
-                    popInstance.moveUp();
+                CopyOnWriteArrayList<PopTip> copyPopTipList = new CopyOnWriteArrayList<>(popTipList);
+                for (int i = 0; i < copyPopTipList.size(); i++) {
+                    PopTip popInstance = copyPopTipList.get(i);
+                    if (copyPopTipList.size() < maxShowCount) {
+                        popInstance.moveBack();
+                    } else {
+                        if (i <= copyPopTipList.size() - maxShowCount) {
+                            popInstance.dismiss();
+                            popTipList.remove(popInstance);
+                        } else {
+                            popInstance.moveBack();
+                        }
+                    }
                 }
             }
         }
@@ -1414,6 +1536,31 @@ public class PopTip extends BaseDialog implements NoTouchInterface {
 
     public PopTip bringToFront() {
         setThisOrderIndex(getHighestOrderIndex());
+        return this;
+    }
+
+    public PopTip setActionRunnable(int actionId, DialogXRunnable<PopTip> runnable) {
+        dialogActionRunnableMap.put(actionId, runnable);
+        return this;
+    }
+
+    public PopTip cleanAction(int actionId) {
+        dialogActionRunnableMap.remove(actionId);
+        return this;
+    }
+
+    public PopTip cleanAllAction() {
+        dialogActionRunnableMap.clear();
+        return this;
+    }
+
+    // for BaseDialog use
+    public void callDialogDismiss() {
+        dismiss();
+    }
+
+    public PopTip bindDismissWithLifecycleOwner(LifecycleOwner owner) {
+        super.bindDismissWithLifecycleOwnerPrivate(owner);
         return this;
     }
 }

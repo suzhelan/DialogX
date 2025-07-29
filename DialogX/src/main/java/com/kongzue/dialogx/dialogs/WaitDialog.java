@@ -21,6 +21,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.R;
@@ -798,13 +799,13 @@ public class WaitDialog extends BaseDialog {
     public void cleanInstance() {
         isShow = false;
         getDialogLifecycleCallback().onDismiss(WaitDialog.this);
+        setLifecycleState(Lifecycle.State.DESTROYED);
         if (dialogImpl != null) dialogImpl.clear();
         dialogImpl = null;
         if (dialogView != null) dialogView.clear();
         dialogView = null;
         dialogLifecycleCallback = null;
         if (ownActivity != null) ownActivity.clear();
-        setLifecycleState(Lifecycle.State.DESTROYED);
         System.gc();
     }
 
@@ -1316,6 +1317,31 @@ public class WaitDialog extends BaseDialog {
 
     public WaitDialog bringToFront() {
         setThisOrderIndex(getHighestOrderIndex());
+        return this;
+    }
+
+    public WaitDialog setActionRunnable(int actionId, DialogXRunnable<WaitDialog> runnable) {
+        dialogActionRunnableMap.put(actionId, runnable);
+        return this;
+    }
+
+    public WaitDialog cleanAction(int actionId){
+        dialogActionRunnableMap.remove(actionId);
+        return this;
+    }
+
+    public WaitDialog cleanAllAction(){
+        dialogActionRunnableMap.clear();
+        return this;
+    }
+
+    // for BaseDialog use
+    public void callDialogDismiss(){
+        dismiss();
+    }
+
+    public WaitDialog bindDismissWithLifecycleOwner(LifecycleOwner owner){
+        super.bindDismissWithLifecycleOwnerPrivate(owner);
         return this;
     }
 }

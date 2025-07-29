@@ -19,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import androidx.annotation.ColorInt;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.R;
@@ -821,6 +822,31 @@ public class GuideDialog extends CustomDialog {
 
     public GuideDialog bringToFront() {
         setThisOrderIndex(getHighestOrderIndex());
+        return this;
+    }
+
+    public GuideDialog setActionRunnable(int actionId, DialogXRunnable<CustomDialog> runnable) {
+        dialogActionRunnableMap.put(actionId, runnable);
+        return this;
+    }
+
+    public GuideDialog cleanAction(int actionId){
+        dialogActionRunnableMap.remove(actionId);
+        return this;
+    }
+
+    public GuideDialog cleanAllAction(){
+        dialogActionRunnableMap.clear();
+        return this;
+    }
+
+    // for BaseDialog use
+    public void callDialogDismiss(){
+        dismiss();
+    }
+
+    public GuideDialog bindDismissWithLifecycleOwner(LifecycleOwner owner){
+        super.bindDismissWithLifecycleOwnerPrivate(owner);
         return this;
     }
 }

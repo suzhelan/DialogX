@@ -96,6 +96,9 @@ public class DialogXBaseRelativeLayout extends RelativeLayout {
             }
             setClipChildren(false);
             setClipToPadding(false);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                setDefaultFocusHighlightEnabled(false);
+            }
 
             //新增的 设置监听 OnApplyWindowInsetsListener
             log("KONGZUE DEBUG DIALOGX: create fitSystemBarUtils");
@@ -269,6 +272,10 @@ public class DialogXBaseRelativeLayout extends RelativeLayout {
         if (onLifecycleCallBack != null) {
             onLifecycleCallBack.onDismiss();
         }
+        if (fitSystemBarUtils != null) {
+            fitSystemBarUtils.recycle();
+        }
+        fitSystemBarUtils = null;
         onSafeInsetsChangeListener = null;
         super.onDetachedFromWindow();
     }

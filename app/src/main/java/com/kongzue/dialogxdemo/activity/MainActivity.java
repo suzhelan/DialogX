@@ -6,12 +6,10 @@ import android.animation.ValueAnimator;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
 import android.net.Uri;
@@ -20,7 +18,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
-import android.text.InputType;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,7 +34,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -41,7 +41,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -74,8 +73,6 @@ import com.kongzue.dialogx.interfaces.BaseDialog;
 import com.kongzue.dialogx.interfaces.BottomDialogSlideEventLifecycleCallback;
 import com.kongzue.dialogx.interfaces.DialogLifecycleCallback;
 import com.kongzue.dialogx.interfaces.DialogXAnimInterface;
-import com.kongzue.dialogx.interfaces.DialogXRunnable;
-import com.kongzue.dialogx.interfaces.DialogXStyle;
 import com.kongzue.dialogx.interfaces.MenuIconAdapter;
 import com.kongzue.dialogx.interfaces.MenuItemTextInfoInterceptor;
 import com.kongzue.dialogx.interfaces.OnBackPressedListener;
@@ -88,14 +85,13 @@ import com.kongzue.dialogx.interfaces.OnInputDialogButtonClickListener;
 import com.kongzue.dialogx.interfaces.OnMenuButtonClickListener;
 import com.kongzue.dialogx.interfaces.OnMenuItemClickListener;
 import com.kongzue.dialogx.interfaces.OnMenuItemSelectListener;
-import com.kongzue.dialogx.interfaces.OnSafeInsetsChangeListener;
+import com.kongzue.dialogx.interfaces.PopMoveDisplacementInterceptor;
 import com.kongzue.dialogx.style.IOSStyle;
 import com.kongzue.dialogx.style.KongzueStyle;
 import com.kongzue.dialogx.style.MIUIStyle;
 import com.kongzue.dialogx.style.MaterialStyle;
-import com.kongzue.dialogx.util.InputInfo;
+import com.kongzue.dialogx.util.ItemDivider;
 import com.kongzue.dialogx.util.TextInfo;
-import com.kongzue.dialogx.util.WindowUtil;
 import com.kongzue.dialogxdemo.BuildConfig;
 import com.kongzue.dialogxdemo.R;
 import com.kongzue.dialogxdemo.custom.recycleview.CustomRecycleViewAdapter;
@@ -298,6 +294,8 @@ public class MainActivity extends BaseActivity {
 
         txtVer.setText("当前版本：" + BuildConfig.VERSION_NAME);
 
+        checkAndroid14InDebugMode();
+
 //        //合并处理演示，在 onDismiss 中获取用户选择进行统一处理，以防止编写大量可能在不同选择下都要处理的重复代码
 //        MessageDialog.show("Title", "Ask Question", "OK", "NO", "OTHER").setDialogLifecycleCallback(new DialogLifecycleCallback<MessageDialog>() {
 //            @Override
@@ -450,16 +448,20 @@ public class MainActivity extends BaseActivity {
         btnContextMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PopMenu.show("添加", "编辑", "删除", "分享").disableMenu("编辑", "删除").setIconResIds(R.mipmap.img_dialogx_demo_add, R.mipmap.img_dialogx_demo_edit, R.mipmap.img_dialogx_demo_delete, R.mipmap.img_dialogx_demo_share).setOnMenuItemClickListener(new OnMenuItemClickListener<PopMenu>() {
-                    @Override
-                    public boolean onClick(PopMenu dialog, CharSequence text, int index) {
-                        if (index == 0) {
-                            dialog.setMenuList(new String[]{"产品A", "产品B", "产品C"});
-                            return true;
-                        }
-                        return false;
-                    }
-                });
+                PopMenu.show("添加", "编辑", "删除", "分享")
+                        .disableMenu("编辑", "删除")
+                        .setIconResIds(R.mipmap.img_dialogx_demo_add, R.mipmap.img_dialogx_demo_edit, R.mipmap.img_dialogx_demo_delete, R.mipmap.img_dialogx_demo_share)
+                        .setOnMenuItemClickListener(new OnMenuItemClickListener<PopMenu>() {
+                            @Override
+                            public boolean onClick(PopMenu dialog, CharSequence text, int index) {
+                                if (index == 0) {
+                                    dialog.enableAllMenu();
+                                    dialog.setMenuList(new String[]{"产品A", "产品B", "产品C"});
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
             }
         });
 
@@ -467,13 +469,15 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onClick(View view) {
-                PopMenu.show(view, new String[]{"选项1", "选项2", "选项3"}).setOnMenuItemClickListener(new OnMenuItemClickListener<PopMenu>() {
-                    @Override
-                    public boolean onClick(PopMenu dialog, CharSequence text, int index) {
-                        btnSelectMenu.setText(text);
-                        return false;
-                    }
-                });
+                PopMenu.show(view, new String[]{"选项1", "选项2", "选项3"})
+                        .setMenuTextInfo(new TextInfo().setGravity(Gravity.CENTER))
+                        .setOnMenuItemClickListener(new OnMenuItemClickListener<PopMenu>() {
+                            @Override
+                            public boolean onClick(PopMenu dialog, CharSequence text, int index) {
+                                btnSelectMenu.setText(text);
+                                return false;
+                            }
+                        }).setItemDivider(new ItemDivider(15, 15, 1));
             }
         });
 
@@ -498,23 +502,39 @@ public class MainActivity extends BaseActivity {
         btnMessageDialog.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MessageDialog.show("标题", "这里是正文内容。", "确定").onShow(new DialogXRunnable<MessageDialog>() {
-                    @Override
-                    public void run(MessageDialog dialog) {
-                        tip("onShow");
-                    }
-                }).onDismiss(new DialogXRunnable<MessageDialog>() {
-                    @Override
-                    public void run(MessageDialog dialog) {
-                        tip("onDismiss");
-                    }
-                }).setTitleIcon(R.mipmap.img_demo_avatar).setOkButton(new OnDialogButtonClickListener<MessageDialog>() {
-                    @Override
-                    public boolean onClick(MessageDialog baseDialog, View v) {
-                        PopTip.show("点击确定按钮");
-                        return false;
-                    }
-                });
+                MessageDialog.show("标题", "这里是正文内容。", "确定")
+                        .setDialogLifecycleCallback(new DialogLifecycleCallback() {
+                            @Override
+                            public void onShow(BaseDialog dialog) {
+                                tip("onShow");
+                                super.onShow(dialog);
+                            }
+
+                            @Override
+                            public void onDismiss(BaseDialog dialog) {
+                                tip("onDismiss");
+                                super.onDismiss(dialog);
+                            }
+                        })
+//                        .onShow(new DialogXRunnable<MessageDialog>() {
+//                            @Override
+//                            public void run(MessageDialog dialog) {
+//                                tip("onShow");
+//                            }
+//                        }).onDismiss(new DialogXRunnable<MessageDialog>() {
+//                            @Override
+//                            public void run(MessageDialog dialog) {
+//                                tip("onDismiss");
+//                            }
+//                        })
+                        .setTitleIcon(R.mipmap.img_demo_avatar)
+                        .setOkButton(new OnDialogButtonClickListener<MessageDialog>() {
+                            @Override
+                            public boolean onClick(MessageDialog dialog, View v) {
+                                PopTip.show("点击确定按钮");
+                                return true;
+                            }
+                        });
             }
         });
 
@@ -1152,7 +1172,7 @@ public class MainActivity extends BaseActivity {
                         .setDialogLifecycleCallback(new DialogLifecycleCallback<CustomDialog>() {
                             @Override
                             public void onShow(CustomDialog dialog) {
-                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                                     RenderEffect blurEffect = RenderEffect.createBlurEffect(20f, 20f, Shader.TileMode.CLAMP);
                                     ((ViewGroup) getWindow().getDecorView()).getChildAt(0).setRenderEffect(blurEffect);
                                 }
@@ -1160,7 +1180,7 @@ public class MainActivity extends BaseActivity {
 
                             @Override
                             public void onDismiss(CustomDialog dialog) {
-                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                                     ((ViewGroup) getWindow().getDecorView()).getChildAt(0).setRenderEffect(null);
                                 }
                             }
@@ -1246,9 +1266,12 @@ public class MainActivity extends BaseActivity {
         });
 
         btnPoptip.setOnClickListener(new View.OnClickListener() {
+            int index;
+
             @Override
             public void onClick(View v) {
-                PopTip.show("这是一个提示");
+                index++;
+                PopTip.show("任务 " + index + " 已完成处理", "撤销").setEnterAnimDuration(500).iconSuccess();
             }
         });
 
@@ -1407,7 +1430,7 @@ public class MainActivity extends BaseActivity {
                         toast("点击回复按钮");
                         return false;
                     }
-                }).showLong();
+                });
             }
         });
 
@@ -1577,5 +1600,44 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         //  AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         super.onCreate(savedInstanceState);
+    }
+
+    // 检查是否处于debug模式且系统版本为Android 14
+    private void checkAndroid14InDebugMode() {
+        if (BuildConfig.DEBUG && Build.VERSION.SDK_INT == 34) {
+            String fullText = "当前系统版本在debug模式下可能存在卡顿现象，属于系统故障，程序编译为release版本后将恢复正常，具体原因请参阅：《Android14 设备上 debug 调试 app 出现卡顿的问题及临时修复办法》";
+            String linkText = "《Android14 设备上 debug 调试 app 出现卡顿的问题及临时修复办法》";
+            String url = "https://xiaozhuanlan.com/topic/1023694578";
+
+            SpannableString spannableString = new SpannableString(fullText);
+            int start = fullText.indexOf(linkText);
+            int end = start + linkText.length();
+            ClickableSpan clickableSpan = new ClickableSpan() {
+                @Override
+                public void onClick(View widget) {
+                    // 点击后跳转到指定链接
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(intent);
+                }
+
+                @Override
+                public void updateDrawState(TextPaint ds) {
+                    super.updateDrawState(ds);
+                    ds.setColor(Color.BLUE); // 设置链接颜色
+                    ds.setUnderlineText(true); // 添加下划线
+                }
+            };
+            spannableString.setSpan(clickableSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            MessageDialog.build()
+                    .setTitle("警告")
+                    .setMessage(spannableString)
+                    .setOkButton("知道了", new OnDialogButtonClickListener<MessageDialog>() {
+                        @Override
+                        public boolean onClick(MessageDialog dialog, View v) {
+                            return false;
+                        }
+                    })
+                    .show();
+        }
     }
 }

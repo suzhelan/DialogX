@@ -20,6 +20,7 @@ import android.widget.RelativeLayout;
 import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
 import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.R;
@@ -209,10 +210,10 @@ public class FullScreenDialog extends BaseDialog implements DialogXBaseBottomDia
                     isShow = false;
                     getDialogLifecycleCallback().onDismiss(me);
                     FullScreenDialog.this.onDismiss(me);
+                    setLifecycleState(Lifecycle.State.DESTROYED);
                     fullScreenDialogTouchEventInterceptor = null;
                     dialogImpl = null;
                     dialogLifecycleCallback = null;
-                    setLifecycleState(Lifecycle.State.DESTROYED);
                     System.gc();
                 }
             });
@@ -236,10 +237,10 @@ public class FullScreenDialog extends BaseDialog implements DialogXBaseBottomDia
             fullScreenDialogTouchEventInterceptor = new FullScreenDialogTouchEventInterceptor(me, dialogImpl);
             boxRoot.setBkgAlpha(0f);
 
-            bkg.setY(boxRoot.getHeight());
             boxRoot.post(new Runnable() {
                 @Override
                 public void run() {
+                    bkg.setY(boxRoot.getHeight());
                     getDialogXAnimImpl().doShowAnim(me, bkg);
                     setLifecycleState(Lifecycle.State.RESUMED);
                 }
@@ -249,7 +250,7 @@ public class FullScreenDialog extends BaseDialog implements DialogXBaseBottomDia
                 public void onChange(Rect unsafeRect) {
                     mUnsafeRect.set(unsafeRect);
                     makeEnterY();
-                    if (!enterAnimRunning) {
+                    if (!enterAnimRunning && getEnterY() != 0) {
                         bkg.setY(getEnterY());
                     }
                 }
@@ -293,7 +294,7 @@ public class FullScreenDialog extends BaseDialog implements DialogXBaseBottomDia
                                 bkgEnterAimY = newBkgEnterAimY;
                                 //需要重新定义终点
                                 doShowAnimRepeat((int) oldVal, (int) newBkgEnterAimY, true);
-                            } else if (bkg.getY() != newBkgEnterAimY) {
+                            } else if (bkg.getY() != newBkgEnterAimY && newBkgEnterAimY != 0) {
                                 bkg.setY(newBkgEnterAimY);
                             }
                         }
@@ -993,6 +994,31 @@ public class FullScreenDialog extends BaseDialog implements DialogXBaseBottomDia
 
     public FullScreenDialog bringToFront() {
         setThisOrderIndex(getHighestOrderIndex());
+        return this;
+    }
+
+    public FullScreenDialog setActionRunnable(int actionId, DialogXRunnable<FullScreenDialog> runnable) {
+        dialogActionRunnableMap.put(actionId, runnable);
+        return this;
+    }
+
+    public FullScreenDialog cleanAction(int actionId) {
+        dialogActionRunnableMap.remove(actionId);
+        return this;
+    }
+
+    public FullScreenDialog cleanAllAction() {
+        dialogActionRunnableMap.clear();
+        return this;
+    }
+
+    // for BaseDialog use
+    public void callDialogDismiss() {
+        dismiss();
+    }
+
+    public FullScreenDialog bindDismissWithLifecycleOwner(LifecycleOwner owner) {
+        super.bindDismissWithLifecycleOwnerPrivate(owner);
         return this;
     }
 }

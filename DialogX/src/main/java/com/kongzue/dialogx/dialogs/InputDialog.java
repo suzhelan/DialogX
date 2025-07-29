@@ -9,6 +9,7 @@ import android.view.View;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.R;
@@ -58,12 +59,24 @@ public class InputDialog extends MessageDialog {
         this.message = message;
         this.okText = okText;
     }
+
+    public InputDialog(CharSequence title, CharSequence message) {
+        cancelable = DialogX.cancelable;
+        this.title = title;
+        this.message = message;
+    }
     
     public InputDialog(int titleResId, int messageResId, int okTextResId) {
         cancelable = DialogX.cancelable;
         this.title = getString(titleResId);
         this.message = getString(messageResId);
         this.okText = getString(okTextResId);
+    }
+
+    public InputDialog(int titleResId, int messageResId) {
+        cancelable = DialogX.cancelable;
+        this.title = getString(titleResId);
+        this.message = getString(messageResId);
     }
     
     public static InputDialog show(CharSequence title, CharSequence message, CharSequence okText) {
@@ -728,6 +741,31 @@ public class InputDialog extends MessageDialog {
 
     public InputDialog bringToFront() {
         setThisOrderIndex(getHighestOrderIndex());
+        return this;
+    }
+
+    public InputDialog setActionRunnable(int actionId, DialogXRunnable<MessageDialog> runnable) {
+        dialogActionRunnableMap.put(actionId, runnable);
+        return this;
+    }
+
+    public InputDialog cleanAction(int actionId){
+        dialogActionRunnableMap.remove(actionId);
+        return this;
+    }
+
+    public InputDialog cleanAllAction(){
+        dialogActionRunnableMap.clear();
+        return this;
+    }
+
+    // for BaseDialog use
+    public void callDialogDismiss(){
+        dismiss();
+    }
+
+    public InputDialog bindDismissWithLifecycleOwner(LifecycleOwner owner){
+        super.bindDismissWithLifecycleOwnerPrivate(owner);
         return this;
     }
 }

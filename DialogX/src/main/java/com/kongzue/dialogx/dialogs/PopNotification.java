@@ -25,6 +25,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.R;
@@ -39,6 +40,7 @@ import com.kongzue.dialogx.interfaces.NoTouchInterface;
 import com.kongzue.dialogx.interfaces.OnBindView;
 import com.kongzue.dialogx.interfaces.OnDialogButtonClickListener;
 import com.kongzue.dialogx.interfaces.OnSafeInsetsChangeListener;
+import com.kongzue.dialogx.interfaces.PopMoveDisplacementInterceptor;
 import com.kongzue.dialogx.util.PopValueAnimator;
 import com.kongzue.dialogx.util.TextInfo;
 import com.kongzue.dialogx.util.views.DialogXBaseRelativeLayout;
@@ -68,6 +70,9 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
     public static long overrideExitDuration = -1;
     public static int overrideEnterAnimRes = 0;
     public static int overrideExitAnimRes = 0;
+
+    public static int maxShowCount = Integer.MAX_VALUE;
+    public static PopMoveDisplacementInterceptor<PopNotification> moveDisplacementInterceptor;
 
     protected OnBindView<PopNotification> onBindView;
     protected DialogLifecycleCallback<PopNotification> dialogLifecycleCallback;
@@ -351,12 +356,21 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
         super.beforeShow();
         if (getDialogView() == null) {
             if (DialogX.onlyOnePopNotification) {
-                PopNotification oldInstance = null;
                 if (popNotificationList != null && !popNotificationList.isEmpty()) {
-                    oldInstance = popNotificationList.get(popNotificationList.size() - 1);
+                    popNotificationList.get(popNotificationList.size() - 1).dismiss();
                 }
-                if (oldInstance != null) {
-                    oldInstance.dismiss();
+            } else {
+                if (popNotificationList != null) {
+                    CopyOnWriteArrayList<PopNotification> popNotificationCopyOnWriteArrayList = new CopyOnWriteArrayList<>(popNotificationList);
+                    for (int i = 0; i < popNotificationCopyOnWriteArrayList.size(); i++) {
+                        PopNotification popInstance = popNotificationCopyOnWriteArrayList.get(i);
+                        if (popNotificationCopyOnWriteArrayList.size() >= maxShowCount) {
+                            if (i <= popNotificationCopyOnWriteArrayList.size() - maxShowCount) {
+                                popInstance.dismiss();
+                                popNotificationList.remove(popInstance);
+                            }
+                        }
+                    }
                 }
             }
             if (popNotificationList == null) popNotificationList = new ArrayList<>();
@@ -395,7 +409,7 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
 
     public PopNotification show(Activity activity) {
         super.beforeShow();
-        if (getDialogView() != null) {
+        if (getDialogView() == null) {
             if (DialogX.onlyOnePopNotification) {
                 PopNotification oldInstance = null;
                 if (popNotificationList != null && !popNotificationList.isEmpty()) {
@@ -575,8 +589,8 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
                     isShow = false;
                     getDialogLifecycleCallback().onDismiss(me);
                     PopNotification.this.onDismiss(me);
-                    dialogImpl = null;
                     setLifecycleState(Lifecycle.State.DESTROYED);
+                    dialogImpl = null;
                     System.gc();
                 }
             });
@@ -629,7 +643,7 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
                         if (popNotificationList != null) {
                             for (int i = 0; i < popNotificationList.size() - 1; i++) {
                                 PopNotification popInstance = popNotificationList.get(i);
-                                popInstance.moveUp(boxBody.getHeight());
+                                popInstance.moveBack(boxBody.getHeight());
                             }
                         }
                     }
@@ -657,7 +671,7 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
             boxBody.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (dismissAnimFlag){
+                    if (dismissAnimFlag) {
                         log("skip click @ A");
                         return;
                     }
@@ -675,7 +689,7 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
             txtDialogxButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (dismissAnimFlag){
+                    if (dismissAnimFlag) {
                         return;
                     }
                     haptic(v);
@@ -849,7 +863,7 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
 
         @Override
         public void doDismiss(final View v) {
-            if (PopNotification.this.preDismiss(PopNotification.this)){
+            if (PopNotification.this.preDismiss(PopNotification.this)) {
                 return;
             }
             if (v != null) v.setEnabled(false);
@@ -872,12 +886,22 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
                     public void run() {
                         getDialogXAnimImpl().doExitAnim(me, boxBody);
 
+                        preRecycle = true;
                         runOnMainDelay(new Runnable() {
                             @Override
                             public void run() {
                                 waitForDismiss();
                             }
                         }, getExitAnimationDuration(null));
+
+                        if (popNotificationList != null) {
+                            //使位于自己之前的PopTip moveDown
+                            int index = popNotificationList.indexOf(me);
+                            for (int i = 0; i < index; i++) {
+                                PopNotification popNotification = popNotificationList.get(i);
+                                popNotification.moveFront(boxBody.getHeight());
+                            }
+                        }
                     }
                 });
             }
@@ -961,10 +985,13 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
             return;
         }
         preRecycle = true;
+        if (getDialogView() != null) {
+            getDialogView().setVisibility(View.GONE);
+        }
         CopyOnWriteArrayList<PopNotification> copyPopNotificationList = new CopyOnWriteArrayList<>(popNotificationList);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             copyPopNotificationList.removeIf(Objects::isNull);
-        }else{
+        } else {
             Iterator<PopNotification> iterator = copyPopNotificationList.iterator();
             while (iterator.hasNext()) {
                 if (iterator.next() == null) {
@@ -972,21 +999,22 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
                 }
             }
         }
-        boolean allPreRecycled = true;
-        for (PopNotification popTip : copyPopNotificationList) {
-            if (!popTip.preRecycle) {
-                allPreRecycled = false;
-                break;
-            }
-        }
-        if (allPreRecycled) {
-            for (PopNotification popTip : copyPopNotificationList) {
-                dismiss(popTip.getDialogView());
-            }
-        }
+//        boolean allPreRecycled = true;
+//        for (PopNotification popTip : copyPopNotificationList) {
+//            if (!popTip.preRecycle) {
+//                allPreRecycled = false;
+//                break;
+//            }
+//        }
+//        if (allPreRecycled) {
+//            for (PopNotification popTip : copyPopNotificationList) {
+//                dismiss(popTip.getDialogView());
+//            }
+//        }
+        dismiss(getDialogView());
     }
 
-    private void moveUp(int newDialogHeight) {
+    private void moveBack(int newDialogHeight) {
         if (getDialogImpl() != null && getDialogImpl().boxBody != null) {
             View bodyView = getDialogImpl().boxBody;
             if (getDialogImpl() == null || bodyView == null) return;
@@ -1012,6 +1040,11 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
                     moveAimTop = y - newDialogHeight * 1.1f;
                     break;
             }
+            if (moveDisplacementInterceptor != null) {
+                moveAimTop = moveDisplacementInterceptor.resetAnimY(popNotificationList == null ? 0 : popNotificationList.indexOf(me), me, bodyView.getY(), moveAimTop, (int) (bodyView.getHeight() / bodyView.getScaleY()), popNotificationList == null ? 1 : popNotificationList.size(), true);
+            }
+            final float fromY = bodyView.getY();
+            float toY = moveAimTop;
             PopValueAnimator valueAnimator = PopValueAnimator.ofFloat(bodyView.getY(), moveAimTop);
             bodyView.setTag(valueAnimator);
             valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -1022,14 +1055,87 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
                         return;
                     }
                     View bodyView = getDialogImpl().boxBody;
+                    float value = (Float) animation.getAnimatedValue();
+                    float totalDistance = toY - fromY;
+                    if (moveDisplacementInterceptor != null && moveDisplacementInterceptor.animUpdater(popNotificationList == null ? 0 : popNotificationList.indexOf(me), me, bodyView, fromY, toY, Math.max(0f, Math.min(1f, (totalDistance == 0f ? 1f : (value - fromY) / totalDistance))), animation, popNotificationList == null ? 1 : countDisplayPopNotificationNum(), true)) {
+                        return;
+                    }
                     if (bodyView != null && bodyView.isAttachedToWindow()) {
-                        bodyView.setY(defaultTop = (Float) animation.getAnimatedValue());
+                        bodyView.setY(defaultTop = value);
                     }
                 }
             });
             valueAnimator.setDuration(enterAnimDuration == -1 ? 300 : enterAnimDuration).setInterpolator(new DecelerateInterpolator(2f));
             valueAnimator.start();
         }
+    }
+
+    private void moveFront(int newDialogHeight) {
+        if (getDialogImpl() != null && getDialogImpl().boxBody != null) {
+            View bodyView = getDialogImpl().boxBody;
+            if (getDialogImpl() == null || bodyView == null) return;
+            if (style.popNotificationSettings() != null)
+                align = style.popNotificationSettings().align();
+            if (align == null) align = DialogXStyle.PopNotificationSettings.ALIGN.TOP;
+            float moveAimTop = 0;
+            float y = bodyView.getY();
+            if (bodyView.getTag() instanceof PopValueAnimator) {
+                ((PopValueAnimator) bodyView.getTag()).end();
+                y = ((PopValueAnimator) bodyView.getTag()).getEndValue();
+            }
+            switch (align) {
+                case TOP:
+                    moveAimTop = y - newDialogHeight * 1.1f;
+                    break;
+                case TOP_INSIDE:
+                    moveAimTop = y - newDialogHeight + bodyView.getPaddingTop();
+                    break;
+                case CENTER:
+                case BOTTOM:
+                case BOTTOM_INSIDE:
+                    moveAimTop = y + newDialogHeight * 1.1f;
+                    break;
+            }
+            if (moveDisplacementInterceptor != null) {
+                moveAimTop = moveDisplacementInterceptor.resetAnimY(popNotificationList == null ? 0 : popNotificationList.indexOf(me), me, bodyView.getY(), moveAimTop, (int) (bodyView.getHeight() / bodyView.getScaleY()), popNotificationList == null ? 1 : popNotificationList.size(), false);
+            }
+            final float fromY = bodyView.getY();
+            float toY = moveAimTop;
+            PopValueAnimator valueAnimator = PopValueAnimator.ofFloat(fromY, toY);
+            bodyView.setTag(valueAnimator);
+            valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    if (getDialogImpl() == null || !isShow) {
+                        animation.cancel();
+                        return;
+                    }
+                    View bodyView = getDialogImpl().boxBody;
+                    float value = (Float) animation.getAnimatedValue();
+                    float totalDistance = toY - fromY;
+                    if (moveDisplacementInterceptor != null && moveDisplacementInterceptor.animUpdater(popNotificationList == null ? 0 : popNotificationList.indexOf(me), me, bodyView, fromY, toY, Math.max(0f, Math.min(1f, (totalDistance == 0f ? 1f : (value - fromY) / totalDistance))), animation, popNotificationList == null ? 1 : countDisplayPopNotificationNum(), false)) {
+                        return;
+                    }
+                    if (bodyView != null && bodyView.isAttachedToWindow()) {
+                        bodyView.setY(defaultTop = value);
+                    }
+                }
+            });
+            valueAnimator.setDuration(exitAnimDuration == -1 ? 300 : exitAnimDuration).setInterpolator(new DecelerateInterpolator(2f));
+            valueAnimator.start();
+        }
+    }
+
+    private int countDisplayPopNotificationNum() {
+        if (popNotificationList == null) return 0;
+        int count = 0;
+        for (int i = 0; i < popNotificationList.size(); i++) {
+            PopNotification tips = popNotificationList.get(i);
+            if (tips != null && !tips.preRecycle) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public void refreshUI() {
@@ -1576,7 +1682,7 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
         return this;
     }
 
-    public PopNotification appendMessage(CharSequence message){
+    public PopNotification appendMessage(CharSequence message) {
         this.message = TextUtils.concat(this.message, message);
         refreshUI();
         return this;
@@ -1588,7 +1694,7 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 getDialogView().setTranslationZ(orderIndex);
             } else {
-                error("DialogX: " + dialogKey() + " 执行 .setThisOrderIndex("+orderIndex+") 失败：系统不支持此方法，SDK-API 版本必须大于 21（LOLLIPOP）");
+                error("DialogX: " + dialogKey() + " 执行 .setThisOrderIndex(" + orderIndex + ") 失败：系统不支持此方法，SDK-API 版本必须大于 21（LOLLIPOP）");
             }
         }
         return this;
@@ -1596,6 +1702,31 @@ public class PopNotification extends BaseDialog implements NoTouchInterface {
 
     public PopNotification bringToFront() {
         setThisOrderIndex(getHighestOrderIndex());
+        return this;
+    }
+
+    public PopNotification setActionRunnable(int actionId, DialogXRunnable<PopNotification> runnable) {
+        dialogActionRunnableMap.put(actionId, runnable);
+        return this;
+    }
+
+    public PopNotification cleanAction(int actionId) {
+        dialogActionRunnableMap.remove(actionId);
+        return this;
+    }
+
+    public PopNotification cleanAllAction() {
+        dialogActionRunnableMap.clear();
+        return this;
+    }
+
+    // for BaseDialog use
+    public void callDialogDismiss() {
+        dismiss();
+    }
+
+    public PopNotification bindDismissWithLifecycleOwner(LifecycleOwner owner) {
+        super.bindDismissWithLifecycleOwnerPrivate(owner);
         return this;
     }
 }

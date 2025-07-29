@@ -1,6 +1,5 @@
 package com.kongzue.dialogx.util.views;
 
-
 import static androidx.core.view.WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_CONTINUE_ON_SUBTREE;
 
 import android.app.Activity;
@@ -50,6 +49,8 @@ public class FitSystemBarUtils {
     private View contentView;
 
     private CallBack callBack;
+
+    private BaseDialog dialog;
 
     /**
      * 绑定到View
@@ -137,6 +138,9 @@ public class FitSystemBarUtils {
 //        view.setFitsSystemWindows(true);
         contentView = view;
         this.callBack = callBack;
+        if (view instanceof DialogXBaseRelativeLayout) {
+            dialog = ((DialogXBaseRelativeLayout) view).getParentDialog();
+        }
         applyWindowInsets();
     }
 
@@ -294,6 +298,8 @@ public class FitSystemBarUtils {
      * 针对不同版本处理Insets
      */
     private void formatInsets(WindowInsetsCompat insetsCompat, RelativePadding initialPadding) {
+        if (contentView == null || insetsCompat == null || initialPadding == null) return;
+
         relativePaddingCache = initialPadding;
         int cutoutPaddingLeft = 0;
         int cutoutPaddingTop = 0;
@@ -517,7 +523,7 @@ public class FitSystemBarUtils {
     }
 
     private boolean isFullScreen() {
-        Activity activity = BaseDialog.getTopActivity();
+        Activity activity = getActivity();
         if (activity == null) {
             return false;
         }
@@ -535,7 +541,7 @@ public class FitSystemBarUtils {
     }
 
     private int checkOrientationAndStatusBarSide() {
-        Activity activity = BaseDialog.getTopActivity();
+        Activity activity = getActivity();
         if (activity == null) {
             return 0;
         }
@@ -563,7 +569,7 @@ public class FitSystemBarUtils {
     private ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener;
 
     private View getDecorView() {
-        Activity activity = BaseDialog.getTopActivity();
+        Activity activity = getActivity();
         if (activity == null) {
             return null;
         }
@@ -611,5 +617,21 @@ public class FitSystemBarUtils {
             e.printStackTrace();
         }
         return -1;
+    }
+
+    private Activity getActivity() {
+        if (dialog == null) return BaseDialog.getTopActivity();
+        return dialog.getOwnActivity();
+    }
+
+    public void recycle() {
+        View decorView = getDecorView();
+        if (decorView != null && onGlobalLayoutListener != null) {
+            decorView.getViewTreeObserver().removeOnGlobalLayoutListener(onGlobalLayoutListener);
+        }
+        onGlobalLayoutListener = null;
+        callBack = null;
+        contentView = null;
+        dialog = null;
     }
 }

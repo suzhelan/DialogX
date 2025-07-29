@@ -16,6 +16,7 @@ import android.widget.RelativeLayout;
 import androidx.annotation.ColorInt;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.R;
@@ -64,9 +65,9 @@ public class CustomDialog extends BaseDialog {
     protected DialogXAnimInterface<CustomDialog> dialogXAnimImpl;
 
     protected WeakReference<View> baseViewWeakReference;
-    protected int alignViewGravity = -1;                                    //指定菜单相对 baseView 的位置
-    protected int width = -1;                                               //指定菜单宽度
-    protected int height = -1;                                              //指定菜单高度
+    protected int alignViewGravity = -1;                                    //指定对话框相对 baseView 的位置
+    protected int width = -1;                                               //指定对话框宽度
+    protected int height = -1;                                              //指定对话框高度
     protected int[] baseViewLoc;
     protected int[] marginRelativeBaseView = new int[4];
 
@@ -157,7 +158,7 @@ public class CustomDialog extends BaseDialog {
     }
 
     private ViewTreeObserver viewTreeObserver;
-    private ViewTreeObserver.OnDrawListener baseViewDrawListener;
+    private ViewTreeObserver.OnPreDrawListener baseViewDrawListener;
 
     public class DialogImpl implements DialogConvertViewInterface {
 
@@ -209,9 +210,9 @@ public class CustomDialog extends BaseDialog {
                     isShow = false;
                     getDialogLifecycleCallback().onDismiss(me);
                     CustomDialog.this.onDismiss(me);
+                    setLifecycleState(Lifecycle.State.DESTROYED);
                     dialogImpl = null;
                     dialogLifecycleCallback = null;
-                    setLifecycleState(Lifecycle.State.DESTROYED);
                     System.gc();
                 }
             });
@@ -257,6 +258,12 @@ public class CustomDialog extends BaseDialog {
             if (boxRoot == null || getOwnActivity() == null) {
                 return;
             }
+
+            boxCustom.setMaxWidth(getMaxWidth());
+            boxCustom.setMaxHeight(getMaxHeight());
+            boxCustom.setMinimumWidth(getMinWidth());
+            boxCustom.setMinimumHeight(getMinHeight());
+
             boxRoot.setAutoUnsafePlacePadding(isEnableImmersiveMode());
             boxRoot.setRootPadding(screenPaddings[0], screenPaddings[1], screenPaddings[2], screenPaddings[3]);
             if (baseView() != null) {
@@ -311,9 +318,9 @@ public class CustomDialog extends BaseDialog {
                     };
 
                     viewTreeObserver = boxCustom.getViewTreeObserver();
-                    viewTreeObserver.addOnDrawListener(baseViewDrawListener = new ViewTreeObserver.OnDrawListener() {
+                    viewTreeObserver.addOnPreDrawListener(baseViewDrawListener = new ViewTreeObserver.OnPreDrawListener() {
                         @Override
-                        public void onDraw() {
+                        public boolean onPreDraw() {
                             int[] baseViewLocCache = new int[2];
                             if (baseView() != null) {
                                 baseView().getLocationInWindow(baseViewLocCache);
@@ -331,6 +338,7 @@ public class CustomDialog extends BaseDialog {
                                 viewTreeObserver = null;
                                 baseViewDrawListener = null;
                             }
+                            return true;
                         }
                     });
                     initSetCustomViewLayoutListener = true;
@@ -386,7 +394,7 @@ public class CustomDialog extends BaseDialog {
                         case LEFT:
                         case LEFT_CENTER:
                             rlp.removeRule(RelativeLayout.CENTER_IN_PARENT);
-                            rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+                            rlp.addRule(RelativeLayout.ALIGN_LEFT);
                             rlp.addRule(RelativeLayout.CENTER_VERTICAL);
                             break;
                         case RIGHT:
@@ -570,12 +578,12 @@ public class CustomDialog extends BaseDialog {
         }
     }
 
-    private void removeDrawListener(ViewTreeObserver viewTreeObserver, ViewTreeObserver.OnDrawListener listener) {
+    private void removeDrawListener(ViewTreeObserver viewTreeObserver, ViewTreeObserver.OnPreDrawListener listener) {
         if (viewTreeObserver == null || listener == null || !viewTreeObserver.isAlive()) {
             return;
         }
         try {
-            viewTreeObserver.removeOnDrawListener(listener);
+            viewTreeObserver.removeOnPreDrawListener(listener);
         } catch (Exception e) {
         }
     }
@@ -1164,6 +1172,55 @@ public class CustomDialog extends BaseDialog {
 
     public CustomDialog bringToFront() {
         setThisOrderIndex(getHighestOrderIndex());
+        return this;
+    }
+
+    public CustomDialog setActionRunnable(int actionId, DialogXRunnable<CustomDialog> runnable) {
+        dialogActionRunnableMap.put(actionId, runnable);
+        return this;
+    }
+
+    public CustomDialog cleanAction(int actionId){
+        dialogActionRunnableMap.remove(actionId);
+        return this;
+    }
+
+    public CustomDialog cleanAllAction(){
+        dialogActionRunnableMap.clear();
+        return this;
+    }
+
+    // for BaseDialog use
+    public void callDialogDismiss(){
+        dismiss();
+    }
+
+    public CustomDialog bindDismissWithLifecycleOwner(LifecycleOwner owner){
+        super.bindDismissWithLifecycleOwnerPrivate(owner);
+        return this;
+    }
+
+    public CustomDialog setMaxWidth(int maxWidth) {
+        this.maxWidth = maxWidth;
+        refreshUI();
+        return this;
+    }
+
+    public CustomDialog setMaxHeight(int maxHeight) {
+        this.maxHeight = maxHeight;
+        refreshUI();
+        return this;
+    }
+
+    public CustomDialog setMinHeight(int minHeight) {
+        this.minHeight = minHeight;
+        refreshUI();
+        return this;
+    }
+
+    public CustomDialog setMinWidth(int minWidth) {
+        this.minWidth = minWidth;
+        refreshUI();
         return this;
     }
 }

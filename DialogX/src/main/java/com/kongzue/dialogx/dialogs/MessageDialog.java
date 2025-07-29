@@ -31,6 +31,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.R;
@@ -418,9 +419,9 @@ public class MessageDialog extends BaseDialog {
                     isShow = false;
                     getDialogLifecycleCallback().onDismiss(me);
                     MessageDialog.this.onDismiss(me);
+                    setLifecycleState(Lifecycle.State.DESTROYED);
                     dialogLifecycleCallback = null;
 
-                    setLifecycleState(Lifecycle.State.DESTROYED);
                     System.gc();
                 }
             });
@@ -1581,6 +1582,31 @@ public class MessageDialog extends BaseDialog {
 
     public MessageDialog bringToFront() {
         setThisOrderIndex(getHighestOrderIndex());
+        return this;
+    }
+
+    public MessageDialog setActionRunnable(int actionId, DialogXRunnable<MessageDialog> runnable) {
+        dialogActionRunnableMap.put(actionId, runnable);
+        return this;
+    }
+
+    public MessageDialog cleanAction(int actionId){
+        dialogActionRunnableMap.remove(actionId);
+        return this;
+    }
+
+    public MessageDialog cleanAllAction(){
+        dialogActionRunnableMap.clear();
+        return this;
+    }
+
+    // for BaseDialog use
+    public void callDialogDismiss(){
+        dismiss();
+    }
+
+    public MessageDialog bindDismissWithLifecycleOwner(LifecycleOwner owner){
+        super.bindDismissWithLifecycleOwnerPrivate(owner);
         return this;
     }
 }

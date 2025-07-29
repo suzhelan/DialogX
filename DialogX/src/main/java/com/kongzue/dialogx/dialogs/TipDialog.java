@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.os.Build;
 import android.text.TextUtils;
 
+import androidx.lifecycle.LifecycleOwner;
+
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.interfaces.DialogXAnimInterface;
 import com.kongzue.dialogx.interfaces.DialogXRunnable;
@@ -281,6 +283,31 @@ public class TipDialog extends WaitDialog {
 
     public TipDialog bringToFront() {
         setThisOrderIndex(getHighestOrderIndex());
+        return this;
+    }
+
+    public TipDialog setActionRunnable(int actionId, DialogXRunnable<WaitDialog> runnable) {
+        dialogActionRunnableMap.put(actionId, runnable);
+        return this;
+    }
+
+    public TipDialog cleanAction(int actionId){
+        dialogActionRunnableMap.remove(actionId);
+        return this;
+    }
+
+    public TipDialog cleanAllAction(){
+        dialogActionRunnableMap.clear();
+        return this;
+    }
+
+    // for BaseDialog use
+    public void callDialogDismiss(){
+        dismiss();
+    }
+
+    public TipDialog bindDismissWithLifecycleOwner(LifecycleOwner owner){
+        super.bindDismissWithLifecycleOwnerPrivate(owner);
         return this;
     }
 }

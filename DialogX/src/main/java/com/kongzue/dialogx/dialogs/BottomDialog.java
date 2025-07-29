@@ -23,7 +23,9 @@ import android.widget.TextView;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.R;
@@ -124,16 +126,6 @@ public class BottomDialog extends BaseDialog implements DialogXBaseBottomDialog 
         return new BottomDialog().setCustomView(onBindView);
     }
 
-    public BottomDialog(CharSequence title, CharSequence message) {
-        this.title = title;
-        this.message = message;
-    }
-
-    public BottomDialog(int titleResId, int messageResId) {
-        this.title = getString(titleResId);
-        this.message = getString(messageResId);
-    }
-
     public static BottomDialog show(CharSequence title, CharSequence message) {
         BottomDialog bottomDialog = new BottomDialog(title, message);
         bottomDialog.show();
@@ -144,18 +136,6 @@ public class BottomDialog extends BaseDialog implements DialogXBaseBottomDialog 
         BottomDialog bottomDialog = new BottomDialog(titleResId, messageResId);
         bottomDialog.show();
         return bottomDialog;
-    }
-
-    public BottomDialog(CharSequence title, CharSequence message, OnBindView<BottomDialog> onBindView) {
-        this.title = title;
-        this.message = message;
-        this.onBindView = onBindView;
-    }
-
-    public BottomDialog(int titleResId, int messageResId, OnBindView<BottomDialog> onBindView) {
-        this.title = getString(titleResId);
-        this.message = getString(messageResId);
-        this.onBindView = onBindView;
     }
 
     public static BottomDialog show(CharSequence title, CharSequence message, OnBindView<BottomDialog> onBindView) {
@@ -170,16 +150,6 @@ public class BottomDialog extends BaseDialog implements DialogXBaseBottomDialog 
         return bottomDialog;
     }
 
-    public BottomDialog(CharSequence title, OnBindView<BottomDialog> onBindView) {
-        this.title = title;
-        this.onBindView = onBindView;
-    }
-
-    public BottomDialog(int titleResId, OnBindView<BottomDialog> onBindView) {
-        this.title = getString(titleResId);
-        this.onBindView = onBindView;
-    }
-
     public static BottomDialog show(CharSequence title, OnBindView<BottomDialog> onBindView) {
         BottomDialog bottomDialog = new BottomDialog(title, onBindView);
         bottomDialog.show();
@@ -192,14 +162,126 @@ public class BottomDialog extends BaseDialog implements DialogXBaseBottomDialog 
         return bottomDialog;
     }
 
-    public BottomDialog(OnBindView<BottomDialog> onBindView) {
-        this.onBindView = onBindView;
-    }
-
     public static BottomDialog show(OnBindView<BottomDialog> onBindView) {
         BottomDialog bottomDialog = new BottomDialog(onBindView);
         bottomDialog.show();
         return bottomDialog;
+    }
+
+    public static BottomDialog show(int titleResId, int messageResId, int okTextResId) {
+        BottomDialog bottomDialog = new BottomDialog(titleResId, messageResId, okTextResId);
+        bottomDialog.show();
+        return bottomDialog;
+    }
+
+    public static BottomDialog show(int titleResId, int messageResId, int okTextResId, int cancelTextResId) {
+        BottomDialog bottomDialog = new BottomDialog(titleResId, messageResId, okTextResId, cancelTextResId);
+        bottomDialog.show();
+        return bottomDialog;
+    }
+
+    public static BottomDialog show(int titleResId, int messageResId, int okTextResId, OnBindView<BottomDialog> onBindView) {
+        BottomDialog bottomDialog = new BottomDialog(titleResId, messageResId, okTextResId, onBindView);
+        bottomDialog.show();
+        return bottomDialog;
+    }
+
+    public static BottomDialog show(int titleResId, int messageResId, int okTextResId, int cancelTextResId, OnBindView<BottomDialog> onBindView) {
+        BottomDialog bottomDialog = new BottomDialog(titleResId, messageResId, okTextResId, cancelTextResId, onBindView);
+        bottomDialog.show();
+        return bottomDialog;
+    }
+
+    public BottomDialog(OnBindView<BottomDialog> onBindView) {
+        this.onBindView = onBindView;
+    }
+
+    public BottomDialog(CharSequence title, OnBindView<BottomDialog> onBindView) {
+        this.title = title;
+        this.onBindView = onBindView;
+    }
+
+    public BottomDialog(int titleResId, OnBindView<BottomDialog> onBindView) {
+        this.title = getString(titleResId);
+        this.onBindView = onBindView;
+    }
+
+    public BottomDialog(CharSequence title, CharSequence message) {
+        this.title = title;
+        this.message = message;
+    }
+
+    public BottomDialog(int titleResId, int messageResId) {
+        this.title = getString(titleResId);
+        this.message = getString(messageResId);
+    }
+
+    public BottomDialog(CharSequence title, CharSequence message, OnBindView<BottomDialog> onBindView) {
+        this.title = title;
+        this.message = message;
+        this.onBindView = onBindView;
+    }
+
+    public BottomDialog(int titleResId, int messageResId, OnBindView<BottomDialog> onBindView) {
+        this.title = getString(titleResId);
+        this.message = getString(messageResId);
+        this.onBindView = onBindView;
+    }
+
+    public BottomDialog(int titleResId, int messageResId, int okTextResId, int cancelTextResId) {
+        this.title = getString(titleResId);
+        this.message = getString(messageResId);
+        this.okText = getString(okTextResId);
+        this.cancelText = getString(cancelTextResId);
+    }
+
+    public BottomDialog(CharSequence title, CharSequence message, CharSequence okText, CharSequence cancelText) {
+        this.title = title;
+        this.message = message;
+        this.okText = okText;
+        this.cancelText = cancelText;
+    }
+
+    public BottomDialog(int titleResId, int messageResId, int okTextResId) {
+        this.title = getString(titleResId);
+        this.message = getString(messageResId);
+        this.okText = getString(okTextResId);
+    }
+
+    public BottomDialog(CharSequence title, CharSequence message, CharSequence okText) {
+        this.title = title;
+        this.message = message;
+        this.okText = okText;
+    }
+
+    public BottomDialog(int titleResId, int messageResId, int okTextResId, OnBindView<BottomDialog> onBindView) {
+        this.title = getString(titleResId);
+        this.message = getString(messageResId);
+        this.okText = getString(okTextResId);
+        this.onBindView = onBindView;
+    }
+
+    public BottomDialog(CharSequence title, CharSequence message, CharSequence okText, OnBindView<BottomDialog> onBindView) {
+        this.title = title;
+        this.message = message;
+        this.okText = okText;
+        this.onBindView = onBindView;
+    }
+
+    public BottomDialog(int titleResId, int messageResId, int okTextResId, int cancelTextResId, OnBindView<BottomDialog> onBindView) {
+        this.title = getString(titleResId);
+        this.message = getString(messageResId);
+        this.okText = getString(okTextResId);
+        this.cancelText = getString(cancelTextResId);
+        this.onBindView = onBindView;
+    }
+
+    public BottomDialog(CharSequence title, CharSequence message, CharSequence okText, CharSequence cancelText, OnBindView<BottomDialog> onBindView) {
+        this.title = title;
+        this.message = message;
+        this.okText = okText;
+        this.cancelText = cancelText;
+        this.onBindView = onBindView;
     }
 
     public BottomDialog show() {
@@ -375,10 +457,10 @@ public class BottomDialog extends BaseDialog implements DialogXBaseBottomDialog 
                     isShow = false;
                     getDialogLifecycleCallback().onDismiss(me);
                     BottomDialog.this.onDismiss(me);
+                    setLifecycleState(Lifecycle.State.DESTROYED);
                     dialogImpl = null;
                     bottomDialogTouchEventInterceptor = null;
                     dialogLifecycleCallback = null;
-                    setLifecycleState(Lifecycle.State.DESTROYED);
                     System.gc();
                 }
             });
@@ -1417,6 +1499,31 @@ public class BottomDialog extends BaseDialog implements DialogXBaseBottomDialog 
 
     public BottomDialog bringToFront() {
         setThisOrderIndex(getHighestOrderIndex());
+        return this;
+    }
+
+    public BottomDialog setActionRunnable(int actionId, DialogXRunnable<BottomDialog> runnable) {
+        dialogActionRunnableMap.put(actionId, runnable);
+        return this;
+    }
+
+    public BottomDialog cleanAction(int actionId) {
+        dialogActionRunnableMap.remove(actionId);
+        return this;
+    }
+
+    public BottomDialog cleanAllAction() {
+        dialogActionRunnableMap.clear();
+        return this;
+    }
+
+    // for BaseDialog use
+    public void callDialogDismiss() {
+        dismiss();
+    }
+
+    public BottomDialog bindDismissWithLifecycleOwner(LifecycleOwner owner) {
+        super.bindDismissWithLifecycleOwnerPrivate(owner);
         return this;
     }
 }

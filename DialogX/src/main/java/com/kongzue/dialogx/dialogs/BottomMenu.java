@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.ColorRes;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.kongzue.dialogx.DialogX;
 import com.kongzue.dialogx.R;
@@ -36,6 +37,7 @@ import com.kongzue.dialogx.interfaces.OnMenuItemClickListener;
 import com.kongzue.dialogx.interfaces.OnMenuItemSelectListener;
 import com.kongzue.dialogx.interfaces.SELECT_MODE;
 import com.kongzue.dialogx.util.BottomMenuArrayAdapter;
+import com.kongzue.dialogx.util.ItemDivider;
 import com.kongzue.dialogx.util.TextInfo;
 import com.kongzue.dialogx.util.views.DialogListView;
 
@@ -61,6 +63,7 @@ public class BottomMenu extends BottomDialog {
     protected boolean showSelectedBackgroundTips = false;
     protected MenuItemLayoutRefreshCallback<BottomMenu> menuMenuItemLayoutRefreshCallback;
     protected Map<Integer, Boolean> menuUsability = new HashMap<Integer, Boolean>();
+    protected ItemDivider itemDivider;
 
     protected OnMenuItemClickListener<BottomMenu> onMenuItemClickListener;
 
@@ -672,6 +675,11 @@ public class BottomMenu extends BottomDialog {
             }
 
         }
+
+        if (itemDivider != null) {
+            listView.setDivider(itemDivider.createDividerDrawable(getOwnActivity(), isLightTheme()));
+            listView.setDividerHeight(itemDivider.getWidth());
+        }
         super.refreshUI();
     }
 
@@ -743,6 +751,21 @@ public class BottomMenu extends BottomDialog {
         this.menuListAdapter = null;
         preRefreshUI();
         return this;
+    }
+
+    public BottomMenu setMenus(int... menuListResId) {
+        this.menuList = Arrays.asList(getTextArray(menuListResId));
+        this.menuListAdapter = null;
+        preRefreshUI();
+        return this;
+    }
+
+    private String[] getTextArray(int[] menuListResId) {
+        String[] result = new String[menuListResId == null ? 0 : menuListResId.length];
+        for (int i = 0; i < (menuListResId == null ? 0 : menuListResId.length); i++) {
+            result[i] = getString(menuListResId[i]);
+        }
+        return result;
     }
 
     public OnIconChangeCallBack<BottomMenu> getOnIconChangeCallBack() {
@@ -1562,5 +1585,36 @@ public class BottomMenu extends BottomDialog {
             return true;
         }
         return enabled;
+    }
+
+    public BottomMenu setActionRunnable(int actionId, DialogXRunnable<BottomDialog> runnable) {
+        dialogActionRunnableMap.put(actionId, runnable);
+        return this;
+    }
+
+    public BottomMenu cleanAction(int actionId) {
+        dialogActionRunnableMap.remove(actionId);
+        return this;
+    }
+
+    public BottomMenu cleanAllAction() {
+        dialogActionRunnableMap.clear();
+        return this;
+    }
+
+    // for BaseDialog use
+    protected void callDialogDismissPrivate() {
+        dismiss();
+    }
+
+    public BottomMenu bindDismissWithLifecycleOwner(LifecycleOwner owner) {
+        super.bindDismissWithLifecycleOwnerPrivate(owner);
+        return this;
+    }
+
+    public BottomMenu setItemDivider(ItemDivider itemDivider) {
+        this.itemDivider = itemDivider;
+        refreshUI();
+        return this;
     }
 }

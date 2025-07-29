@@ -49,3 +49,36 @@ dependencyResolutionManagement {
         } catch (Exception ex) {
         }
     }
+```
+### 疑难解决   
+- 1.如果遇到在Dialog里使用ListView,RecyclerView等动态长度的View,始终只展示一行的高度 可通过以下代码解决 **注意 这是Dialogx自身的特性,与本fork无关**
+```kotlin
+        MessageDialog.build()
+            .setTitle("请选择赞助项目")
+            .onShow {
+                val listView = SimpleTextListAdapter.createView(
+                    activity,
+                    singleSelectMenuText,
+                    object : SimpleTextListAdapter.OnItemClickListener {
+                        override fun onItemClick(
+                            adapter: BaseAdapter,
+                            position: Int,
+                            view: View
+                        ) {
+                            //跳转到浏览器
+                            val intent = Intent(Intent.ACTION_VIEW)
+                            intent.data = payItemList[position].payUrl.toUri()
+                            activity.startActivity(intent)
+                        }
+                    }
+                )
+                //核心代码
+                it.dialogImpl.boxList.addView(listView)
+                it.dialogImpl.boxList.isVisible = true
+            }
+            .setMessage(message)
+            .setOkButton("支付完成") { dialog, v ->
+                showQueryOrderResultDialog()
+                false
+            }.show()
+```

@@ -12,6 +12,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         mavenLocal()
+        //关键代码
         maven { url = uri("https://jitpack.io") }
     }
 }

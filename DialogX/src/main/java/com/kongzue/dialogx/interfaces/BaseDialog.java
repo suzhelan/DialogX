@@ -83,6 +83,7 @@ public abstract class BaseDialog implements LifecycleOwner {
     protected boolean enableImmersiveMode = true;   // 沉浸式适配
     protected int thisOrderIndex = 0;
     protected Map<Integer, DialogXRunnable> dialogActionRunnableMap = new HashMap<Integer, DialogXRunnable>();
+    protected int[] customDialogLayoutResId = new int[2];
 
     public enum BUTTON_SELECT_RESULT {
         NONE,           // 未做出选择
@@ -509,7 +510,13 @@ public abstract class BaseDialog implements LifecycleOwner {
             activityWeakReference.clear();
         }
         activityWeakReference = null;
-        System.gc();
+        BaseDialog.gc();
+    }
+
+    public static void gc() {
+        if (DialogX.autoGC){
+            System.gc();
+        }
     }
 
     protected abstract void shutdown();
@@ -1164,11 +1171,15 @@ public abstract class BaseDialog implements LifecycleOwner {
         owner.getLifecycle().addObserver(new LifecycleEventObserver() {
             @Override
             public void onStateChanged(@NonNull LifecycleOwner source, @NonNull Lifecycle.Event event) {
-                if (event == Lifecycle.Event.ON_STOP || event == Lifecycle.Event.ON_DESTROY) {
+                if (event == Lifecycle.Event.ON_DESTROY) {
                     callDialogDismiss();
                     source.getLifecycle().removeObserver(this);
                 }
             }
         });
+    }
+
+    public int getCustomDialogLayoutResId(boolean isLightTheme) {
+        return customDialogLayoutResId[isLightTheme ? 0 : 1];
     }
 }

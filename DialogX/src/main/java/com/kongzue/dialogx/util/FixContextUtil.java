@@ -1,13 +1,37 @@
 package com.kongzue.dialogx.util;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.view.LayoutInflater;
+
+import java.lang.reflect.Method;
 
 
 public class FixContextUtil {
+
+    public static String modulePath = "";
+
+    /**
+     * @noinspection JavaReflectionMemberAccess
+     */
+    @SuppressLint("DiscouragedPrivateApi")
+    public static void injectResourcesToContext(Context context) {
+        try {
+            Resources resources = context.getResources();
+            AssetManager assetManager = resources.getAssets();
+            Method method = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);
+            method.setAccessible(true);
+            method.invoke(assetManager, modulePath);
+        } catch (Exception ex) {
+        }
+    }
+
     //获得注入了ClassLoader的Context,使其能加载模块中的类
     public static Context getFixContext(Context context) {
+        injectResourcesToContext(context);
         return new FixContext(context);
     }
 

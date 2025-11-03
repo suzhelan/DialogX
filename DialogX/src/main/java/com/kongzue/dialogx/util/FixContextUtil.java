@@ -31,7 +31,9 @@ public class FixContextUtil {
 
     //获得注入了ClassLoader的Context,使其能加载模块中的类
     public static Context getFixContext(Context context) {
-        injectResourcesToContext(context);
+        if (!modulePath.isEmpty()) {
+            injectResourcesToContext(context);
+        }
         return new FixContext(context);
     }
 
